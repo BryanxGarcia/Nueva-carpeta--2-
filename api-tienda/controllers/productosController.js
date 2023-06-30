@@ -15,8 +15,6 @@ const obtenerProductos = (req, res) => {
 // Controlador para agregar un nuevo producto
 const agregarProductos = (req, res) => {
   const producto = req.body;
-  console.log(producto);
-  console.log(producto);
   connection.query('INSERT INTO producto SET ?', producto, (error, results) => {
     if (error) {
       console.error('Error al agregar el producto', error);
@@ -44,6 +42,8 @@ const eliminarProductos = (req, res) => {
 const actualizarProductos = (req, res) => {
   const codigoProducto = req.params.codigo;
   const nuevoProducto = req.body;
+  console.log(nuevoProducto);
+  console.log(codigoProducto);
 
   connection.query('UPDATE producto SET ? WHERE codigo = ?', [nuevoProducto, codigoProducto], (error, results) => {
     if (error) {

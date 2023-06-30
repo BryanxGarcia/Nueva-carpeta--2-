@@ -5,8 +5,8 @@ const router = express.Router();
 
 router.get("/", ProductController.obtenerProductos);
 router.post("/", ProductController.agregarProductos);
-router.put("/actualizar/:codigo", ProductController.actualizarProductos);
-router.delete("/eliminar/:codigo", ProductController.eliminarProductos);
+router.put("/:codigo", ProductController.actualizarProductos);
+router.delete("/:codigo", ProductController.eliminarProductos);
 
 
 module.exports = router;

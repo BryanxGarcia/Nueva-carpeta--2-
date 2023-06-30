@@ -7,6 +7,9 @@ import Form from "react-bootstrap/Form";
 import Table from "react-bootstrap/Table";
 import Modal from "react-bootstrap/Modal";
 import './fabricante.css'; // Estilos CSS del Sidebar
+import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
+import 'jspdf-autotable';
 
 export const Fabricantes = () => {
   const [fabricantes, setFabricantes] = useState([]);
@@ -65,7 +68,7 @@ export const Fabricantes = () => {
       // Envía una solicitud DELETE a la API para eliminar el fabricante
       console.log(fabricante.codigo)
       const response = await fetch(
-        `http://localhost:3001/fabricantes/eliminar/${fabricante.codigo}`,
+        `http://localhost:3001/fabricantes/${fabricante.codigo}`,
         {
           method: "DELETE",
         }
@@ -100,7 +103,7 @@ export const Fabricantes = () => {
     try {
       // Envía una solicitud PUT a la API para actualizar el fabricante
       const response = await fetch(
-        `http://localhost:3001/fabricantes/actualizar/${fabricanteSeleccionado.codigo}`,
+        `http://localhost:3001/fabricantes/${fabricanteSeleccionado.codigo}`,
         {
           method: "PUT",
           headers: {
@@ -128,6 +131,72 @@ export const Fabricantes = () => {
       console.error("Error al comunicarse con la API", error);
     }
   };
+  
+  const generateCSVContent = () => {
+    const csvContent = "data:text/csv;charset=utf-8," + fabricantes.map(fabricantes => Object.values(fabricantes).join(",")).join("\n");
+    return csvContent;
+  };
+
+  const handleExportCSV = () => {
+    const csvContent = generateCSVContent();
+    downloadCSV(csvContent);
+  };
+
+  const downloadCSV = (csvContent) => {
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "data.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.autoTable({
+      head: [['#', 'Nombre']],
+      body: fabricantes.map(fabricantes => [fabricantes.codigo, fabricantes.nombre]),
+    });
+
+    doc.save('tabla.pdf');
+  };
+  
+  const handlePrint = () => {
+    const table = document.getElementById('myTable');
+    if (table) {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Tabla para imprimir</title>
+          </head>
+          <body>
+            ${table.outerHTML}
+            <script type="text/javascript">
+              window.onload = function() {
+                window.print();
+                window.onafterprint = function() {
+                  window.close();
+                };
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(fabricantes);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Tabla');
+    XLSX.writeFile(workbook, 'tabla.xlsx');
+  };
+  
+
+
 
   return (
     <div style={{ display: "flex", flex: '0 0 70%', margin: '0 0 0 0', alignItems: "center" }}>
@@ -142,13 +211,19 @@ export const Fabricantes = () => {
                 >
                   Agregar nuevo
                 </Button>
+                
+                <Button onClick={handleExportCSV} style={{margin:"3px"}}>Exportar a CSV</Button>
+                <Button onClick={handlePrint} style={{margin:"3px"}}>Imprimir</Button>
+                <Button onClick={exportToExcel} style={{margin:"3px"}}>Exportar a Excel</Button>
+                <Button onClick={exportToPDF} style={{margin:"3px"}}>Exportar a PDF</Button>
+
               </div>
             </div>
           </Col>
         </Row>
         <Row>
           <Col>
-            <Table striped bordered hover style={{ width: "100%" }}>
+            <Table striped bordered hover style={{ width: "100%" }} id="myTable">
               <thead>
                 <tr>
                   <th>#</th>
